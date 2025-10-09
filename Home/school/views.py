@@ -5,4 +5,4 @@ from django.http import HttpResponse
 
 
 def school(request):
-    return render(request, 'schoolfile/index.html')
+    return render(request, 'Home/index.html')
