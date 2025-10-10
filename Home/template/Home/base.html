@@ -6,7 +6,7 @@
    <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
-      <title>School - Dashboard</title>
+      <title>Preskool - Dashboard</title>
       <link rel="shortcut icon" href="{%static 'assets/img/favicon.png' %}">
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,500;0,600;0,700;1,400&amp;display=swap">
       <link rel="stylesheet" href="{%static 'assets/plugins/bootstrap/css/bootstrap.min.css' %}">
@@ -271,11 +271,11 @@
               const clearAllBtn = document.querySelector('.clear-noti');
       
               if (notiDropdown) {
-                  // Add a click event listener to the notification dropdown
+                
                   notiDropdown.addEventListener('click', function() {
                       const url = "{% url 'mark_notifications_as_read' %}";
       
-                      // Use the Fetch API to send a POST request to mark notifications as read
+              
                       fetch(url, {
                           method: 'POST',
                           headers: {
@@ -294,7 +294,7 @@
                           }
                       })
                       .catch(error => {
-                          console.error('Error:', error);
+                          console.error('Error:', error); 
                       });
                   });
               }
@@ -323,7 +323,7 @@
                           }
                       })
                       .catch(error => {
-                          console.error('Error:', error);
+                          console.error('Error:', error);  
                       });
                   });
               }
@@ -333,4 +333,3 @@
       
   </body>
   </html>
-  
