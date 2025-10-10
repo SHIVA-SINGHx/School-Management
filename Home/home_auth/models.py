@@ -1,105 +1,63 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login, logout
-from .models import CustomUser, PasswordResetRequest
-from django.utils import timezone
-from django.contrib import messages
+from django.db import models
+
+# Create your models here.
+from django.db import models
+from django.contrib.auth.models import AbstractUser
 from django.core.mail import send_mail
 from django.conf import settings
+import uuid
 from django.utils.crypto import get_random_string
+from django.utils import timezone
 
+class CustomUser(AbstractUser):
+    username = models.CharField(max_length=100, unique=True)
+    email = models.EmailField(max_length=255, unique=True, db_index=True)
+    is_authorized = models.BooleanField(default=False)
+    login_token = models.CharField(max_length=6, blank=True, null=True)
+    first_name = models.CharField(max_length=30, blank=True)
+    last_name = models.CharField(max_length=30, blank=True)
+    date_joined = models.DateTimeField(auto_now_add=True)
+    
+       # Fields for user roles
+    is_student = models.BooleanField(default=False)
+    is_admin = models.BooleanField(default=False)
+    is_teacher = models.BooleanField(default=False) 
 
-def signup_view(request):
-    if request.method == 'POST':
-        first_name = request.POST['first_name']
-        last_name = request.POST['last_name']
-        email = request.POST['email']
-        password = request.POST['password']
-        role = request.POST.get('role')  # Get role from the form (student, teacher, or admin)
-        
-        # Create the user
-        user = CustomUser.objects.create_user(
-            username=email,
-            email=email,
-            first_name=first_name,
-            last_name=last_name,
-            password=password,
+    # Set related_name to None to prevent reverse relationship creation
+    groups = models.ManyToManyField(
+        'auth.Group',
+        related_name=None,
+        blank=True
+    )
+    user_permissions = models.ManyToManyField(
+        'auth.Permission',
+        related_name=None,
+        blank=True
+    )
+
+    def __str__(self):
+        return self.username
+
+class PasswordResetRequest(models.Model):
+    user = models.ForeignKey('CustomUser', on_delete=models.CASCADE)
+    email = models.EmailField()
+    token = models.CharField(max_length=32, default=get_random_string(32), editable=False, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    # Define token validity period (e.g., 1 hour)
+    TOKEN_VALIDITY_PERIOD = timezone.timedelta(hours=1)
+
+    def is_valid(self):
+        return timezone.now() <= self.created_at + self.TOKEN_VALIDITY_PERIOD
+
+    def send_reset_email(self):
+        reset_link = f"http://localhost:8000/authentication/reset-password/{self.token}/"
+        send_mail(
+            'Password Reset Request',
+            f'Click the following link to reset your password: {reset_link}',
+            settings.DEFAULT_FROM_EMAIL,
+            [self.email],
+            fail_silently=False,
         )
         
-        # Assign the appropriate role
-        if role == 'student':
-            user.is_student = True
-        elif role == 'teacher':
-            user.is_teacher = True
-        elif role == 'admin':
-            user.is_admin = True
 
-        user.save()  # Save the user with the assigned role
-        login(request, user)
-        messages.success(request, 'Signup successful!')
-        return redirect('index')  
-    return render(request, 'authentication/register.html') 
-
-
-def login_view(request):
-    if request.method == 'POST':
-        email = request.POST['email']
-        password = request.POST['password']
-        
-        user = authenticate(request, username=email, password=password)
-        if user is not None:
-            login(request, user)
-            messages.success(request, 'Login successful!')
-            
-            # Redirect user based on their role
-            if user.is_admin:
-                return redirect('admin_dashboard')
-            elif user.is_teacher:
-                return redirect('teacher_dashboard')
-            elif user.is_student:
-                return redirect('dashboard')
-            else:
-                messages.error(request, 'Invalid user role')
-                return redirect('index')  
-            
-        else:
-            messages.error(request, 'Invalid credentials')
-    return render(request, 'authentication/login.html')  
-
-
-def forgot_password_view(request):
-    if request.method == 'POST':
-        email = request.POST['email']
-        user = CustomUser.objects.filter(email=email).first()
-        
-        if user:
-            token = get_random_string(32)
-            reset_request = PasswordResetRequest.objects.create(user=user, email=email, token=token)
-            reset_request.send_reset_email()
-            messages.success(request, 'Reset link sent to your email.')
-        else:
-            messages.error(request, 'Email not found.')
-    
-    return render(request, 'authentication/forgot-password.html')  # Render forgot password template
-
-
-def reset_password_view(request, token):
-    reset_request = PasswordResetRequest.objects.filter(token=token).first()
-    
-    if not reset_request or not reset_request.is_valid():
-        messages.error(request, 'Invalid or expired reset link')
-        return redirect('index')
-
-    if request.method == 'POST':
-        new_password = request.POST['new_password']
-        reset_request.user.set_password(new_password)
-        reset_request.user.save()
-        messages.success(request, 'Password reset successful')
-        return redirect('login')
-
-    return render(request, 'authentication/reset_password.html', {'token': token})  # Render reset password template
-
-
-def logout_view(request):
-    logout(request)
-    messages.success(request, 'You have been logged out.')
-    return redirect('index')
