@@ -20,5 +20,5 @@ from school.views import *
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', school, name= 'school')
+    path('', home, name= 'home')
 ]
