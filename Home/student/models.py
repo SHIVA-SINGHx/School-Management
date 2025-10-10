@@ -27,6 +27,7 @@ class Student(models.Model):
     date_of_birth = models.DateField()
     student_class = models.CharField(max_length=100)
     religion = models.CharField(max_length=10)
+    joining_date = models.DateField(default=True)
     mobile_number = models.CharField(max_length=15)
     admission_number = models.CharField(max_length=100)
     section = models.CharField(max_length=15)

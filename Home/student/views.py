@@ -3,5 +3,14 @@ from django.http import HttpResponse
 
 # Create your views here.
 
-def student(request):
-    return HttpResponse("this is the student page")
+def add_student(request):
+    return render(request, "students/add-student.html")
+
+def student_list(request):
+    return render(request, "students/student-details.html")
+
+def edit_student(request):
+    return render (request, "students/edit-student.html")
+
+def view_student(request):
+    return render(request, "students/students.html")
