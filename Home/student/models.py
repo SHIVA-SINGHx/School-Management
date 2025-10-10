@@ -1,4 +1,6 @@
 from django.db import models
+from django.utils.text import slugify
+from django.utils.crypto import get_random_string
 
 # Create your models here.
 
@@ -28,4 +30,20 @@ class Student(models.Model):
     mobile_number = models.CharField(max_length=15)
     admission_number = models.CharField(max_length=100)
     section = models.CharField(max_length=15)
+    student_image = models.ImageField(upload_to="student/",blank=True )
+    parent = models.OneToOneField(Parent, on_delete=models.CASCADE)
+    slug = models.SlugField(max_length=225, unique=True, blank=True)
+    
+    
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(f"{self.first_name}-{self.last_name}-{self.student_id}")
+        super(Student, self).save(*args, **kwargs)
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} ({self.student_id})"
+    
+
+
+    
     
