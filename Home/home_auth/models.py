@@ -59,5 +59,3 @@ class PasswordResetRequest(models.Model):
             [self.email],
             fail_silently=False,
         )
-        
-

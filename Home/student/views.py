@@ -1,29 +1,25 @@
-from django.shortcuts import render, get_object_or_404, redirect
-from django.http import HttpResponse 
+from django.http import HttpResponseForbidden
+from django.shortcuts import render, get_object_or_404,redirect
 from .models import *
 from django.contrib import messages
-from django.http import HttpResponseForbidden
 # Create your views here.
 
-
-
 def add_student(request):
-    if request.method == 'POST':
-        first_name = request.POST.get("first_name")
-        last_name = request.POST.get("last_name")
-        student_id = request.POST.get("student_id")
-        gender = request.POST.get("gender")
-        date_of_birth= request.POST.get("date_of_birth")
-        religion = request.POST.get("religion")
-        student_class = request.POST.get("student_class")
-        joining_date = request.POST.get("joining_date")
-        mobile_number = request.POST.get("mobile_number")
-        admission_number = request.POST.get("admission_number")
-        section = request.POST.get("section")
-        student_image = request.Files.get("student_image")
-        
-    ## fetching parent data from the form
-    
+    if request.method == "POST":
+        first_name = request.POST.get('first_name')
+        last_name = request.POST.get('last_name')
+        student_id = request.POST.get('student_id')
+        gender = request.POST.get('gender')
+        date_of_birth = request.POST.get('date_of_birth')
+        student_class = request.POST.get('student_class')
+        religion = request.POST.get('religion')
+        joining_date = request.POST.get('joining_date')
+        mobile_number = request.POST.get('mobile_number')
+        admission_number = request.POST.get('admission_number')
+        section = request.POST.get('section')
+        student_image = request.FILES.get('student_image')
+
+        # Retrieve parent data from the form
         father_name = request.POST.get('father_name')
         father_occupation = request.POST.get('father_occupation')
         father_mobile = request.POST.get('father_mobile')
@@ -34,9 +30,8 @@ def add_student(request):
         mother_email = request.POST.get('mother_email')
         present_address = request.POST.get('present_address')
         permanent_address = request.POST.get('permanent_address')
-        
-        ## save parent info.. into db
-        
+
+        # save parent information
         parent = Parent.objects.create(
             father_name= father_name,
             father_occupation= father_occupation,
@@ -49,9 +44,8 @@ def add_student(request):
             present_address= present_address,
             permanent_address= permanent_address
         )
-        
-        ## save student data info.. into db
-        
+
+        # Save student information
         student = Student.objects.create(
             first_name= first_name,
             last_name= last_name,
@@ -67,19 +61,23 @@ def add_student(request):
             student_image = student_image,
             parent = parent
         )
-        
-        messages.success(request, "Student created succesfully")
-        return render(request,"student_list")
-    
-    return render(request, "students/add-student.html")
+
+
+  
+
+    return render(request,"students/add-student.html")
+
+
 
 def student_list(request):
     student_list = Student.objects.select_related('parent').all()
+    unread_notification = request.user.notification_set.filter(is_read=False)
     context = {
-        'student_list': student_list
+        'student_list': student_list,
+        'unread_notification': unread_notification
     }
-    
-    return render(request, "students/students.html")
+    return render(request, "students/students.html", context)
+
 
 def edit_student(request,slug):
     student = get_object_or_404(Student, slug=slug)
@@ -110,10 +108,9 @@ def edit_student(request,slug):
         parent.present_address = request.POST.get('present_address')
         parent.permanent_address = request.POST.get('permanent_address')
         parent.save()
-        
-        
+
 #  update student information
-        
+
         student.first_name= first_name
         student.last_name= last_name
         student.student_id= student_id
@@ -127,25 +124,25 @@ def edit_student(request,slug):
         student.section = section
         student.student_image = student_image
         student.save()
+
         
         return redirect("student_list")
     return render(request, "students/edit-student.html",{'student':student, 'parent':parent} )
 
-
-def edit_student(request):
-    return render (request, "students/edit-student.html")
 
 def view_student(request, slug):
     student = get_object_or_404(Student, student_id = slug)
     context = {
         'student': student
     }
-    return render(request, "students/student-details.html")
+    return render(request, "students/student-details.html", context)
 
-def delete_student(request, slug):
+
+def delete_student(request,slug):
     if request.method == "POST":
         student = get_object_or_404(Student, slug=slug)
         student_name = f"{student.first_name} {student.last_name}"
         student.delete()
-        return redirect('student_list')
+
+        return redirect ('student_list')
     return HttpResponseForbidden()
