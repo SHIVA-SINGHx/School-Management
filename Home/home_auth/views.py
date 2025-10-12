@@ -14,7 +14,17 @@ def signup_view(request):
         last_name = request.POST['last_name']
         email = request.POST['email']
         password = request.POST['password']
-        role = request.POST.get('role')  # Get role from the form (student, teacher, or admin)
+        role = request.POST.get('role')  # Get role from the form
+        
+        # Validate role
+        if role not in ['student', 'teacher', 'admin']:
+            messages.error(request, 'Please select a valid role')
+            return render(request, 'authentication/register.html')
+        
+        # Check if user already exists
+        if CustomUser.objects.filter(email=email).exists():
+            messages.error(request, 'Email already registered')
+            return render(request, 'authentication/register.html')
         
         # Create the user
         user = CustomUser.objects.create_user(
@@ -33,11 +43,19 @@ def signup_view(request):
         elif role == 'admin':
             user.is_admin = True
 
-        user.save()  # Save the user with the assigned role
+        user.save()
         login(request, user)
         messages.success(request, 'Signup successful!')
-        return redirect('index')  # Redirect to the index or home page
-    return render(request, 'authentication/register.html')  # Render signup template
+        
+        # Direct redirect based on role
+        if user.is_admin:
+            return redirect('admin_dashboard')
+        elif user.is_teacher:
+            return redirect('teacher_dashboard')
+        else:
+            return redirect('dashboard')
+            
+    return render(request, 'authentication/register.html')
 
 
 def login_view(request):
@@ -48,22 +66,26 @@ def login_view(request):
         user = authenticate(request, username=email, password=password)
         if user is not None:
             login(request, user)
-            messages.success(request, 'Login successful!')
             
             # Redirect user based on their role
             if user.is_admin:
+                messages.success(request, 'Login successful!')
                 return redirect('admin_dashboard')
             elif user.is_teacher:
+                messages.success(request, 'Login successful!')
                 return redirect('teacher_dashboard')
             elif user.is_student:
+                messages.success(request, 'Login successful!')
                 return redirect('dashboard')
             else:
-                messages.error(request, 'Invalid user role')
-                return redirect('index')  # Redirect to index in case of error
+                # Yaha logout kar do kyunki role invalid hai
+                logout(request)
+                messages.error(request, 'Invalid user role. Please contact admin.')
+                return redirect('login')
             
         else:
             messages.error(request, 'Invalid credentials')
-    return render(request, 'authentication/login.html')  # Render login template
+    return render(request, 'authentication/login.html')
 
 
 def forgot_password_view(request):
