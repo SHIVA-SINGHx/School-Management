@@ -52,8 +52,9 @@ def login_view(request):
             messages.success(request, 'Login successful!')
             return redirect('dashboard')
 
+
  
-            # # Redirect user based on their role
+            # Redirect user based on their role
             # if user.is_admin:
             #     return redirect('admin_dashboard')
             # elif user.is_teacher:
@@ -99,7 +100,7 @@ def reset_password_view(request, token):
         messages.success(request, 'Password reset successful')
         return redirect('login')
 
-    return render(request, 'authentication/reset_password.html', {'token': token})  # Render reset password template
+    return render(request, 'authentication/reset_password.html', {'token': token})  
 
 
 def logout_view(request):
