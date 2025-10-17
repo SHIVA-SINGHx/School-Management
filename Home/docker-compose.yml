@@ -12,3 +12,5 @@ services:
           - .env
        depends_on:
           - redis
+    redis:
+       image: redis.alpine
