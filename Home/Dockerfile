@@ -16,3 +16,6 @@ RUN pip install gunicorn
 # static files
 
 RUN python manage.py collectstatic --no-input --no-input
+
+# run django
+ CMD [ "gunicorn", "--bind", "0.0.0.0.8000", "Home.wsgi:application" ]
